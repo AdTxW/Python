@@ -1,0 +1,82 @@
+import os
+import tkinter as tk
+from tkinter import filedialog
+
+def ask_for_vivaldi_path():
+    """فتح نافذة لاختيار ملف تشغيل Vivaldi"""
+    root = tk.Tk()
+    root.withdraw()  # إخفاء النافذة الرئيسية لـ Tkinter
+    vivaldi_path = filedialog.askopenfilename(
+        title="حدد ملف تشغيل Vivaldi",
+        filetypes=[("Executable Files", "*")]
+    )
+    if not vivaldi_path:
+        print("⚠️ لم يتم تحديد ملف تشغيل Vivaldi. الرجاء إعادة تشغيل السكربت.")
+        exit()
+    return vivaldi_path
+
+def get_existing_profiles():
+    """إرجاع قائمة بأسماء البروفايلات الموجودة في مجلد Vivaldi"""
+    user_data_path = os.path.expanduser("~/.config/vivaldi")
+    if not os.path.exists(user_data_path):
+        return {}
+
+    return {folder: os.path.join(user_data_path, folder)
+            for folder in os.listdir(user_data_path) if folder.startswith("Profile ")}
+
+def create_desktop_shortcut(profile_name, vivaldi_path, desktop_path):
+    """إنشاء اختصار لملف بروفايل معين على سطح المكتب في Linux"""
+    shortcut_path = os.path.join(desktop_path, f"{profile_name}.desktop")
+    
+    shortcut_content = f"""[Desktop Entry]
+Type=Application
+Name={profile_name}
+Exec={vivaldi_path} --profile-directory="{profile_name}"
+Icon={vivaldi_path}
+Terminal=false
+"""
+
+    with open(shortcut_path, "w") as shortcut_file:
+        shortcut_file.write(shortcut_content)
+
+    # جعل الاختصار قابلاً للتشغيل
+    os.chmod(shortcut_path, 0o755)
+    
+    print(f"✅ تم إنشاء اختصار: {shortcut_path}")
+
+def create_new_profiles(num_users):
+    """إنشاء بروفايلات جديدة إذا لم يكن العدد كافيًا"""
+    user_data_path = os.path.expanduser("~/.config/vivaldi")
+    existing_profiles = get_existing_profiles()
+    existing_count = len(existing_profiles)
+
+    if existing_count >= num_users:
+        print(f"🔹 لديك بالفعل {existing_count} بروفايل. لا حاجة لإنشاء جديد.")
+        return existing_profiles
+
+    for i in range(existing_count + 1, num_users + 1):
+        profile_name = f"Profile {i}"
+        profile_path = os.path.join(user_data_path, profile_name)
+
+        if not os.path.exists(profile_path):
+            os.makedirs(profile_path)
+            print(f"✅ تم إنشاء بروفايل جديد: {profile_name}")
+
+    return get_existing_profiles()
+
+def main():
+    vivaldi_path = ask_for_vivaldi_path()
+    desktop_path = os.path.join(os.path.expanduser("~"), "Desktop", "VivaldiProfiles")
+
+    if not os.path.exists(desktop_path):
+        os.makedirs(desktop_path)
+
+    num_users = int(input("🟢 كم عدد المستخدمين المطلوب؟ "))
+
+    profiles = create_new_profiles(num_users)
+
+    for profile_name, profile_path in profiles.items():
+        create_desktop_shortcut(profile_name, vivaldi_path, desktop_path)
+
+if __name__ == "__main__":
+    main()

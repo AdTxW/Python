@@ -1,0 +1,27 @@
+
+
+
+/usr/bin/vivaldi
+
+
+
+
+
+
+
+chmod +x open_shortcuts.sh  # جعل السكربت قابلاً للتنفيذ
+
+
+
+
+
+
+chmod +x delete_vivaldi_cache.sh
+
+
+
+
+
+
+
+
